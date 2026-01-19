@@ -1,13 +1,8 @@
 VAR b_fecha_proceso VARCHAR2(10);
-VAR b_contador_registros NUMBER(3);
-
 EXEC :b_fecha_proceso := TO_CHAR(SYSDATE, 'YYYY-MM-DD');
-EXEC :b_contador_registros := 0;
-
---TRUCADO DE TABLA PARA MULTIPLES EJECUCIONES.
-TRUNCATE TABLE usuario_clave;
 
 DECLARE
+    v_contador_registros NUMBER(3) := 0;
     v_total_empleados number(3) :=0; --contador de empleados 
     v_fecha_proceso DATE; --fecha de ejecucion del bloque
     v_nombre_completo VARCHAR2(100);
@@ -36,6 +31,9 @@ DECLARE
     
     --INICIO DEL BLOQUE
 BEGIN
+    --TRUCADO DE TABLA PARA MULTIPLES EJECUCIONES.
+    EXECUTE IMMEDIATE 'TRUNCATE TABLE usuario_clave';
+    
     --BLOQUE DE ITERACION PARA OBTENER DATOS DEL EMPLEADO CON CURSOR IMPLICITO
     FOR r IN(
         SELECT
@@ -108,7 +106,7 @@ BEGIN
     VALUES(r.id_emp, r.numrun_emp, r.dvrun_emp, v_nombre_completo, v_nombre_usuario, v_contrasenia);
  
     --contador de filas insertadas 
-    :b_contador_registros := :b_contador_registros+ SQL%ROWCOUNT;
+    v_contador_registros := v_contador_registros + SQL%ROWCOUNT;
      END LOOP;
     --*************************************AQUÍ TERMINA EL LOOP*******************************************
      
@@ -116,7 +114,7 @@ BEGIN
      EN CASO DE COINCIDIR SE CONFIRMAN CAMBIOS SINO SE REALIZA ROLLBACK.
      EN AMBOS CASOS SE MUESTRA UN MENSAJE AL USUARIO*/
 
-    IF :b_contador_registros = v_total_empleados THEN DBMS_OUTPUT.put_line('USUARIOS Y CONTRASEÑAS CREADAS EXITOSAMENTE');
+    IF v_contador_registros = v_total_empleados THEN DBMS_OUTPUT.put_line('USUARIOS Y CONTRASEÑAS CREADAS EXITOSAMENTE');
         COMMIT;
     ELSE DBMS_OUTPUT.put_line('SE A PRODUCIDO UNA INCONSISTENCIA EN LOS DATOS.');
         ROLLBACK;  
